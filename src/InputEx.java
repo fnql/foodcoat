@@ -14,7 +14,9 @@ public class InputEx extends JFrame {
     JTextField tfId, tfName, tfType, tfSearch, tfPrice, tfDayOff,tfGood, tfStars, tfDist, tfVisit, tfTel;
     JTextArea ta;
     JRadioButton rbId, rbName, rbType;
-    JPanel p;
+    Image Iconimg;
+    JPanel p,search;
+    JComboBox<String> shoplist;
     Connection conn;
     Statement stmt;
     ResultSet rs;
@@ -57,15 +59,15 @@ public class InputEx extends JFrame {
                 dbSearch();
             }
         });
-        this.setSize(300,550);
+        this.setSize(300,500);
         this.setVisible(true);
     }
     private void createGUI() {
         Container ca = getContentPane();
         ca.setLayout(new FlowLayout());
         JPanel c = new JPanel();
-        c.setLayout(new GridLayout(15,4,5,5));
-        c.setBounds(0, 0, 100, 250);
+        c.setPreferredSize(new Dimension(200,500));
+        c.setLayout(new GridLayout(15,2,5,5));
         c.add(new JLabel("학번        "));
         tfId = new JTextField(20);
         c.add(tfId);
@@ -105,8 +107,8 @@ public class InputEx extends JFrame {
         btnSelect = new JButton("조회");
         c.add(btnSelect);
         ca.add(BorderLayout.CENTER,c);
-        onOff = true;
-
+        onOff = false;
+        c.setVisible(false);
         btnOn = new JButton("상세");
         btnOn.addActionListener(new ActionListener() {
             @Override
@@ -119,43 +121,55 @@ public class InputEx extends JFrame {
     }
     //화면 만들기
     private void plus() {
-        Container c = getContentPane();
-        c.setLayout(new FlowLayout());
+        try{
+            conn = DBConn.dbConnection(); //db 설정 클래스 처리
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("select name from bestFood;"); //식당명 가져오기
 
-        p= new JPanel();
-        p.add(new JLabel("A Panel"));
-        c.add(p);
-        //db CRUD 창
+            Iconimg = new ImageIcon("logo1.png").getImage();
+            setIconImage(Iconimg);
+            Container c = getContentPane();
+            c.setLayout(new FlowLayout());
 
+            search.add(new JLabel("점포검색",JLabel.CENTER)); //식당 표시
+            shoplist = new JComboBox<String>(shoplistItem1);
+            search.add(shoplist);
+            // TODO: 2021-06-16 rs를 이용해서 점포검색을 합시다! 
 
-        //검색부분
-        tfSearch = new JTextField(18);
-        rbId = new JRadioButton("학번", true);
-        rbName = new JRadioButton("이름");
-        rbType = new JRadioButton("종류");
-        ButtonGroup group = new ButtonGroup();
-        group.add(rbId);
-        group.add(rbName);
-        group.add(rbType);
-        btnSearch = new JButton("검색");
-        JPanel pn1 = new JPanel();
-        pn1.add(new JLabel(" "));
-        pn1.add(tfSearch);
-        pn1.add(btnSearch);
-        JPanel pn2 = new JPanel();
-        pn2.add(rbId);
-        pn2.add(rbName);
-        pn2.add(rbType);
-        JPanel pMiddle = new JPanel(new BorderLayout(0,0));
-        pMiddle.add(BorderLayout.NORTH, pn1);
-        pMiddle.add(BorderLayout.CENTER, pn2);
-        TitledBorder tb = new TitledBorder("검색");
-        pMiddle.setBorder(tb);
+            //db CRUD 창
+            //검색부분
+            tfSearch = new JTextField(18);
+            rbId = new JRadioButton("학번", true);
+            rbName = new JRadioButton("이름");
+            rbType = new JRadioButton("종류");
+            ButtonGroup group = new ButtonGroup();
+            group.add(rbId);
+            group.add(rbName);
+            group.add(rbType);
+            btnSearch = new JButton("검색");
+            JPanel pn1 = new JPanel();
+            pn1.add(new JLabel(" "));
+            pn1.add(tfSearch);
+            pn1.add(btnSearch);
+            JPanel pn2 = new JPanel();
+            pn2.add(rbId);
+            pn2.add(rbName);
+            pn2.add(rbType);
+            JPanel pMiddle = new JPanel(new BorderLayout(0,0));
+            pMiddle.add(BorderLayout.NORTH, pn1);
+            pMiddle.add(BorderLayout.CENTER, pn2);
+            TitledBorder tb = new TitledBorder("검색");
+            pMiddle.setBorder(tb);
 
-        //출력 장소 만들기
-        c.add(pMiddle);
-        ta = new JTextArea(15, 20);
-        c.add(ta);
+            //출력 장소 만들기
+            c.add(pMiddle);
+            ta = new JTextArea(30, 15);
+            ta.setFont(new Font("휴먼엑스포",Font.PLAIN,17));
+            c.add(ta);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
     //db 선택
     private void dbSelect() {
@@ -256,8 +270,6 @@ public class InputEx extends JFrame {
             }
             rs = stmt.executeQuery(searchSql);
             String line ="";
-            ta.setText("    id              name            Type  \n");
-            ta.append("-----------------------------------------------\n");
             while (rs.next()){
                 String name = rs.getString("name");
                 String foodType = rs.getString("foodType");
@@ -269,13 +281,15 @@ public class InputEx extends JFrame {
                 String dist = rs.getString("dist");
                 String visit = rs.getString("visit");
                 String tel = rs.getString("tel");
-                line = " | " +id + " | " +name + " | "+ foodType +"\n" +
-                        " | " +"price" + " | " +"dayOff" + " | "+ "bestMenu" +"\n" +
-                        " | " +price + " | " +dayOff + " | "+ good +"\n"    +
-                        " | " +"stars" + " | " +"dist" + " | "+ "visit" +"\n" +
-                        " | " +stars + " | " +dist + " | "+ visit +"\n"    +
-                        " | " +"tel" +"\n" +
-                        " | " +tel +"\n";
+                line = "식당명 : "+ name +"\n"+
+                        "음식종류 : " + foodType+"\n"+
+                        "평균가 : " +price +"\n"+
+                        "쉬는날 : " +dayOff +"\n"+
+                        "추천메뉴 : " + good +"\n"+
+                        "별점 : " +stars +"\n"+
+                        "거리 : " +dist +"\n"+
+                        "방문일 : " + visit +"\n"+
+                        "전화번호 : " + tel;
                 System.out.println("rs => " +line);
                 ta.append(line);
             }
