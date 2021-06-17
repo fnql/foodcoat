@@ -6,8 +6,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
-
 public class InputEx extends JFrame {
     //변수 설정
     JButton btnInsert, btnDelete, btnUpdate, btnSelect, btnSearch, btnCreate, btnOn;
@@ -18,9 +18,11 @@ public class InputEx extends JFrame {
     JPanel p,search;
     JComboBox<String> shoplist;
     Connection conn;
-    Statement stmt;
-    ResultSet rs;
+    Statement stmt,stmt2;
+    ResultSet rs,rcount;
     Boolean onOff;
+    Color BGcolor;
+    int i=0;
 
     public InputEx(){
         this.setTitle("맛집 관리 프로젝트");
@@ -28,6 +30,7 @@ public class InputEx extends JFrame {
 
         createGUI();
         plus();
+        event();
         //버튼 이벤트 설정
         btnInsert.addActionListener(new ActionListener() {
             @Override
@@ -68,7 +71,7 @@ public class InputEx extends JFrame {
         JPanel c = new JPanel();
         c.setPreferredSize(new Dimension(200,500));
         c.setLayout(new GridLayout(15,2,5,5));
-        c.add(new JLabel("학번        "));
+        c.add(new JLabel("구분        "));
         tfId = new JTextField(20);
         c.add(tfId);
         c.add(new JLabel("이름        "));
@@ -124,16 +127,48 @@ public class InputEx extends JFrame {
         try{
             conn = DBConn.dbConnection(); //db 설정 클래스 처리
             stmt = conn.createStatement();
+            stmt2 = conn.createStatement();
+
+//
+            rcount = stmt2.executeQuery("select * from bestFood;");
             rs = stmt.executeQuery("select name from bestFood;"); //식당명 가져오기
 
+            BGcolor=new Color(178,235,244,80);
             Iconimg = new ImageIcon("logo1.png").getImage();
             setIconImage(Iconimg);
             Container c = getContentPane();
             c.setLayout(new FlowLayout());
 
+            search=new JPanel() {
+                public void paintComponent(Graphics g) //바탕색 설정
+                {
+                    g.setColor(BGcolor);
+                    g.fillRect(0,0,2000,100);
+                    setOpaque(false);
+                    super.paintComponent(g);
+                }
+            };
+            search.setLayout(new GridLayout(0,4));
+
+            while (rcount.next()){
+                String name = rcount.getString("name");
+                i++;
+            }
+            stmt2.close();
+            String nana[] = new String[i];
+            i=0;
+            while (rs.next()){
+                nana[i] = rs.getString("name");
+                System.out.println(nana[i]);
+                i++;
+            }
+            stmt.close();
+            conn.close();
             search.add(new JLabel("점포검색",JLabel.CENTER)); //식당 표시
-            shoplist = new JComboBox<String>(shoplistItem1);
+            shoplist = new JComboBox<String>(nana);
             search.add(shoplist);
+
+            c.add(search);
             // TODO: 2021-06-16 rs를 이용해서 점포검색을 합시다! 
 
             //db CRUD 창
@@ -269,6 +304,7 @@ public class InputEx extends JFrame {
                 searchSql = "select * from bestFood where foodType = '" + searchText + "';";
             }
             rs = stmt.executeQuery(searchSql);
+            ta.setText("");
             String line ="";
             while (rs.next()){
                 String name = rs.getString("name");
@@ -298,6 +334,55 @@ public class InputEx extends JFrame {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void event(){
+        try{
+            conn = DBConn.dbConnection(); //db 설정 클래스 처리
+            stmt = conn.createStatement();
+            shoplist.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String searchN = "";
+                    String shopS=(String) shoplist.getSelectedItem();
+                    searchN = "select * from bestFood where name = '" + shopS + "';";
+                    try {
+                        rs = stmt.executeQuery(searchN);
+                        ta.setText("");
+                        String line ="";
+                        while (rs.next()){
+                            String name = rs.getString("name");
+                            String foodType = rs.getString("foodType");
+                            String id = rs.getString("id");
+                            String price = rs.getString("price");
+                            String  dayOff= rs.getString("dayOff");
+                            String good = rs.getString("good");
+                            String stars = rs.getString("stars");
+                            String dist = rs.getString("dist");
+                            String visit = rs.getString("visit");
+                            String tel = rs.getString("tel");
+                            line = "식당명 : "+ name +"\n"+
+                                    "음식종류 : " + foodType+"\n"+
+                                    "평균가 : " +price +"\n"+
+                                    "쉬는날 : " +dayOff +"\n"+
+                                    "추천메뉴 : " + good +"\n"+
+                                    "별점 : " +stars +"\n"+
+                                    "거리 : " +dist +"\n"+
+                                    "방문일 : " + visit +"\n"+
+                                    "전화번호 : " + tel;
+                            System.out.println("rs => " +line);
+                            ta.append(line);
+                        }
+                    } catch (Exception a) {
+                        a.printStackTrace();
+                    }
+                }
+            });
+
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     public static void main(String[] args) {
