@@ -4,10 +4,8 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+
 public class InputEx extends JFrame {
     //변수 설정
     JButton btnInsert, btnDelete, btnUpdate, btnSelect, btnSearch, btnCreate, btnOn;
@@ -63,7 +61,7 @@ public class InputEx extends JFrame {
                 dbSearch();
             }
         });
-        this.setSize(600,500);
+        this.setSize(300,650);
         this.setVisible(true);
     }
     private void createGUI() { //crud기능
@@ -118,7 +116,9 @@ public class InputEx extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 onOff = !onOff;
-                c.setVisible(onOff);
+                new Part1();
+//                c.setVisible(onOff);
+
             }
         });
         ca.add(btnOn);
@@ -149,7 +149,7 @@ public class InputEx extends JFrame {
                     super.paintComponent(g);
                 }
             };
-            search.setLayout(new GridLayout(2,4));
+            search.setLayout(new GridLayout(2,0));
 
             while (rcount.next()){
                 String name = rcount.getString("name");
@@ -172,7 +172,6 @@ public class InputEx extends JFrame {
             search.add(price=new JTextField());
 
             c.add(search);
-            // TODO: 2021-06-16 rs를 이용해서 점포검색을 합시다! 
 
             //db CRUD 창
             //검색부분
@@ -211,14 +210,14 @@ public class InputEx extends JFrame {
 
     }
     //db 선택
-    private void dbSelect() {
+    private void dbSelect() {       //조회
         try {
             conn = DBConn.dbConnection(); //db 설정 클래스 처리
             stmt = conn.createStatement();
             rs = stmt.executeQuery("select * from bestFood;");
             String line ="";
-            ta.setText("    id              name            Type  \n");
-            ta.append("-----------------------------------------------\n");
+            ta.setText("id    name    Type  \n");
+            ta.append("---------------------\n");
             while (rs.next()){
                 String name = rs.getString("name");
                 String foodType = rs.getString("foodType");
@@ -229,7 +228,8 @@ public class InputEx extends JFrame {
             }
             stmt.close();
             conn.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -260,15 +260,55 @@ public class InputEx extends JFrame {
             String id = tfId.getText().toString();
             String name = tfName.getText().toString();
             String foodType = tfType.getText().toString();
+            String  price= tfPrice.getText().toString();
+            String  dayOff= tfDayOff.getText().toString();
+            String  good= tfGood.getText().toString();
+            String  stars= tfStars.getText().toString();
+            String  dist= tfDist.getText().toString();
+            String  visit= tfVisit.getText().toString();
+            String  tel= tfTel.getText().toString();
+            if (id.equals("") || id.equals("채워주세요!")){
+                tfId.setText("채워주세요!");     return; }
+            if (name.equals("") || name.equals("채워주세요!!")){
+                tfName.setText("채워주세요!!");  return; }
+            if (foodType.equals("") || foodType.equals("채워주세요!")){
+                tfType.setText("채워주세요!");     return; }
+            if (price.equals("") || price.equals("채워주세요!")){
+                tfPrice.setText("채워주세요!");     return; }
+            if (dayOff.equals("") || dayOff.equals("채워주세요!")){
+                tfDayOff.setText("채워주세요!");     return; }
+            if (good.equals("") || good.equals("채워주세요!")){
+                tfGood.setText("채워주세요!");     return; }
+            if (stars.equals("") || stars.equals("채워주세요!")){
+                tfStars.setText("채워주세요!");     return; }
+            if (dist.equals("") || dist.equals("채워주세요!")){
+                tfDist.setText("채워주세요!");     return; }
+            if (visit.equals("") || visit.equals("채워주세요!")){
+                tfVisit.setText("채워주세요!");     return; }
+            if (tel.equals("") || tel.equals("채워주세요!")){
+                tfTel.setText("채워주세요!");     return; }
+
             //data 입력 구문
-            stmt.executeUpdate("insert into bestFood(id,name,foodType) values('" + id + "', '" + name + "', '" +foodType+"');");
+            stmt.executeUpdate("insert into bestFood values('" + id + "', '" + name + "', '" +foodType+"','" + price +
+                    "','" + dayOff + "','" +good+"','" +stars+ "','" + dist + "','" + visit + "','" + tel+ "');");
             System.out.println(name + "입력 완료");
             tfId.setText("");
             tfName.setText("");
             tfType.setText("");
+            tfPrice.setText("");
+            tfDayOff.setText("");
+            tfGood.setText("");
+            tfStars.setText("");
+            tfDist.setText("");
+            tfVisit.setText("");
+            tfTel.setText("");
+
             stmt.close();
             conn.close();
-        } catch (Exception e) {
+        }catch (SQLIntegrityConstraintViolationException a){
+            tfId.setText("구분번호 중복!!!");
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -320,8 +360,6 @@ public class InputEx extends JFrame {
 
     private void event(){
         try{
-
-
             shoplist.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -404,5 +442,23 @@ public class InputEx extends JFrame {
         new InputEx();
     }
 
+}
+class Part1 extends JFrame{
+    Part1(){
+        super("창2"); //타이틀
+        JPanel jPanel = new JPanel();
 
+        jPanel.setBackground(Color.BLUE);
+
+        setSize(300, 200);
+
+        add(jPanel);
+
+        Dimension frameSize = getSize();
+        Dimension windowSize = Toolkit.getDefaultToolkit().getScreenSize();
+        setLocation((windowSize.width - frameSize.width) / 2,
+                (windowSize.height - frameSize.height) / 2); //화면 중앙에 띄우기
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setVisible(true);
+    }
 }
