@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
+import java.time.LocalDate;
 
 public class InputEx extends JFrame {
     //변수 설정
@@ -18,7 +19,7 @@ public class InputEx extends JFrame {
     JComboBox<String> shoplist;
     Connection conn;
     Statement stmt,stmt2;
-    ResultSet rs,rcount;
+    ResultSet rs,rcount,rdate;
     Boolean onOff;
     Color BGcolor;
     int i=0;
@@ -61,7 +62,7 @@ public class InputEx extends JFrame {
                 dbSearch();
             }
         });
-        this.setSize(300,650);
+        this.setSize(300,550);
         this.setVisible(true);
     }
     private void createGUI() { //crud기능
@@ -116,8 +117,7 @@ public class InputEx extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 onOff = !onOff;
-                new Part1();
-//                c.setVisible(onOff);
+                c.setVisible(onOff);
 
             }
         });
@@ -126,13 +126,20 @@ public class InputEx extends JFrame {
     //화면 만들기
     private void plus() {   //front 보이는 부분
         try{
+            LocalDate currentDate = LocalDate.now();
+            String resultStr = null;
+            resultStr = JOptionPane.showInputDialog("어제 방문하신 식당을 입력해주세요.", "X");
+            System.out.println("resultStr = " + resultStr);
             conn = DBConn.dbConnection(); //db 설정 클래스 처리
             stmt = conn.createStatement();
             stmt2 = conn.createStatement();
+            String searchSql = "";
+            searchSql = String.format("update bestFood set visit =  '%s'  where name =    '%s'   ", currentDate,resultStr);
 
-//
+            stmt.executeUpdate(searchSql);
             rcount = stmt2.executeQuery("select * from bestFood;");
             rs = stmt.executeQuery("select name from bestFood;"); //식당명 가져오기
+
 
             BGcolor=new Color(178,235,244,80);
             Iconimg = new ImageIcon("logo1.png").getImage();
@@ -200,7 +207,7 @@ public class InputEx extends JFrame {
 
             //출력 장소 만들기
             c.add(pMiddle);
-            ta = new JTextArea(20, 15);
+            ta = new JTextArea(15, 15);
             ta.setFont(new Font("휴먼엑스포",Font.PLAIN,17));
             scrollPane = new JScrollPane(ta);
             c.add(scrollPane);
@@ -390,8 +397,17 @@ public class InputEx extends JFrame {
                         String priceS=price.getText();
                         String searchSQL = "SELECT * FROM bestFood WHERE price<= '" +priceS+ "' ;";
                         rs = stmt.executeQuery(searchSQL);
-                        ta.setText("");
-                        addTa(rs);
+                        String line ="";
+                        ta.setText("id    name    avgPrice  \n");
+                        ta.append("---------------------\n");
+                        while (rs.next()){
+                            String name = rs.getString("name");
+                            String price = rs.getString("price");
+                            String id = rs.getString("id");
+                            line = " | " +id + " | " +name + " | "+price+"\n";
+                            System.out.println("rs => " +line);
+                            ta.append(line);
+                        }
                         stmt.close();
                         conn.close();
                     } catch (Exception a) {
@@ -443,22 +459,4 @@ public class InputEx extends JFrame {
     }
 
 }
-class Part1 extends JFrame{
-    Part1(){
-        super("창2"); //타이틀
-        JPanel jPanel = new JPanel();
 
-        jPanel.setBackground(Color.BLUE);
-
-        setSize(300, 200);
-
-        add(jPanel);
-
-        Dimension frameSize = getSize();
-        Dimension windowSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setLocation((windowSize.width - frameSize.width) / 2,
-                (windowSize.height - frameSize.height) / 2); //화면 중앙에 띄우기
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setVisible(true);
-    }
-}
