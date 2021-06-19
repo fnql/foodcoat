@@ -9,7 +9,7 @@ import java.time.LocalDate;
 
 public class InputEx extends JFrame {
     //변수 설정
-    JButton btnInsert, btnDelete, btnUpdate, btnSelect, btnSearch, btnCreate, btnOn;
+    JButton btnInsert, btnDelete, btnUpdate, btnSelect, btnSearch, btnRe, btnOn;
     JTextField tfId, tfName, tfType, tfSearch, tfPrice, tfDayOff,tfGood, tfStars, tfDist, tfVisit, tfTel,price;
     JScrollPane scrollPane;
     JTextArea ta;
@@ -18,7 +18,7 @@ public class InputEx extends JFrame {
     JPanel p,search;
     JComboBox<String> shoplist;
     Connection conn;
-    Statement stmt,stmt2;
+    Statement stmt,stmt2,stmt3;
     ResultSet rs,rcount,rdate;
     Boolean onOff;
     Color BGcolor;
@@ -133,13 +133,14 @@ public class InputEx extends JFrame {
             conn = DBConn.dbConnection(); //db 설정 클래스 처리
             stmt = conn.createStatement();
             stmt2 = conn.createStatement();
+            stmt3 = conn.createStatement();
             String searchSql = "";
             searchSql = String.format("update bestFood set visit =  '%s'  where name =    '%s'   ", currentDate,resultStr);
 
             stmt.executeUpdate(searchSql);
             rcount = stmt2.executeQuery("select * from bestFood;");
             rs = stmt.executeQuery("select name from bestFood;"); //식당명 가져오기
-
+            rdate = stmt3.executeQuery("select * from bestFood order by visit");
 
             BGcolor=new Color(178,235,244,80);
             Iconimg = new ImageIcon("logo1.png").getImage();
@@ -159,7 +160,6 @@ public class InputEx extends JFrame {
             search.setLayout(new GridLayout(2,0));
 
             while (rcount.next()){
-                String name = rcount.getString("name");
                 i++;
             }
             stmt2.close();
@@ -171,7 +171,36 @@ public class InputEx extends JFrame {
                 i++;
             }
             stmt.close();
+
+
+            btnRe = new JButton("추천");
+            btnRe.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try{
+                        String line ="";
+                        ta.setText("id    name    visit  \n");
+                        ta.append("---------------------\n");
+                        while (rdate.next()){
+                            String name = rdate.getString("name");
+                            String visit = rdate.getString("visit");
+                            String id = rdate.getString("id");
+                            line = " | " +id + " | " +name + " |    "+visit+"\n";
+                            System.out.println("rdate => " +line);
+                            ta.append(line);
+                        }
+                    }catch (Exception c) {
+                        c.printStackTrace();
+                    }
+
+                }
+            });
+            c.add(btnRe);
+
+            stmt3.close();
             conn.close();
+
+
             search.add(new JLabel("점포검색",JLabel.CENTER)); //식당 표시
             shoplist = new JComboBox<String>(nana);
             search.add(shoplist);
@@ -264,6 +293,7 @@ public class InputEx extends JFrame {
         try {
             conn = DBConn.dbConnection(); //db 설정 클래스 처리
             stmt = conn.createStatement();
+
             String id = tfId.getText().toString();
             String name = tfName.getText().toString();
             String foodType = tfType.getText().toString();
@@ -274,6 +304,7 @@ public class InputEx extends JFrame {
             String  dist= tfDist.getText().toString();
             String  visit= tfVisit.getText().toString();
             String  tel= tfTel.getText().toString();
+
             if (id.equals("") || id.equals("채워주세요!")){
                 tfId.setText("채워주세요!");     return; }
             if (name.equals("") || name.equals("채워주세요!!")){
