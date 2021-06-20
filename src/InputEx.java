@@ -133,14 +133,16 @@ public class InputEx extends JFrame {
             conn = DBConn.dbConnection(); //db 설정 클래스 처리
             stmt = conn.createStatement();
             stmt2 = conn.createStatement();
-            stmt3 = conn.createStatement();
+
             String searchSql = "";
+
+
             searchSql = String.format("update bestFood set visit =  '%s'  where name =    '%s'   ", currentDate,resultStr);
 
             stmt.executeUpdate(searchSql);
             rcount = stmt2.executeQuery("select * from bestFood;");
             rs = stmt.executeQuery("select name from bestFood;"); //식당명 가져오기
-            rdate = stmt3.executeQuery("select * from bestFood order by visit");
+
 
             BGcolor=new Color(178,235,244,80);
             Iconimg = new ImageIcon("logo1.png").getImage();
@@ -162,7 +164,7 @@ public class InputEx extends JFrame {
             while (rcount.next()){
                 i++;
             }
-            stmt2.close();
+
             String nana[] = new String[i];
             i=0;
             while (rs.next()){
@@ -170,7 +172,6 @@ public class InputEx extends JFrame {
                 System.out.println(nana[i]);
                 i++;
             }
-            stmt.close();
 
 
             btnRe = new JButton("추천");
@@ -178,8 +179,11 @@ public class InputEx extends JFrame {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try{
+                        conn = DBConn.dbConnection();
+                        stmt3 = conn.createStatement();
+                        rdate = stmt3.executeQuery("select * from bestFood order by visit desc;");
                         String line ="";
-                        ta.setText("id    name    visit  \n");
+                        ta.setText("    id    name    visit\n");
                         ta.append("---------------------\n");
                         while (rdate.next()){
                             String name = rdate.getString("name");
@@ -189,6 +193,7 @@ public class InputEx extends JFrame {
                             System.out.println("rdate => " +line);
                             ta.append(line);
                         }
+                        stmt3.close();
                     }catch (Exception c) {
                         c.printStackTrace();
                     }
@@ -197,8 +202,6 @@ public class InputEx extends JFrame {
             });
             c.add(btnRe);
 
-            stmt3.close();
-            conn.close();
 
 
             search.add(new JLabel("점포검색",JLabel.CENTER)); //식당 표시
@@ -240,6 +243,10 @@ public class InputEx extends JFrame {
             ta.setFont(new Font("휴먼엑스포",Font.PLAIN,17));
             scrollPane = new JScrollPane(ta);
             c.add(scrollPane);
+            stmt.close();
+            stmt2.close();
+
+            conn.close();
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -358,15 +365,55 @@ public class InputEx extends JFrame {
             String in_id = tfId.getText().toString();
             String in_name = tfName.getText().toString();
             String in_Type = tfType.getText().toString();
+            String  price= tfPrice.getText().toString();
+            String  dayOff= tfDayOff.getText().toString();
+            String  good= tfGood.getText().toString();
+            String  stars= tfStars.getText().toString();
+            String  dist= tfDist.getText().toString();
+            String  visit= tfVisit.getText().toString();
+            String  tel= tfTel.getText().toString();
+
+            if (in_id.equals("") || in_id.equals("채워주세요!")){
+                tfId.setText("채워주세요!");     return; }
+            if (in_name.equals("") || in_name.equals("채워주세요!!")){
+                tfName.setText("채워주세요!!");  return; }
+            if (in_Type.equals("") || in_Type.equals("채워주세요!")){
+                tfType.setText("채워주세요!");     return; }
+            if (price.equals("") || price.equals("채워주세요!")){
+                tfPrice.setText("채워주세요!");     return; }
+            if (dayOff.equals("") || dayOff.equals("채워주세요!")){
+                tfDayOff.setText("채워주세요!");     return; }
+            if (good.equals("") || good.equals("채워주세요!")){
+                tfGood.setText("채워주세요!");     return; }
+            if (stars.equals("") || stars.equals("채워주세요!")){
+                tfStars.setText("채워주세요!");     return; }
+            if (dist.equals("") || dist.equals("채워주세요!")){
+                tfDist.setText("채워주세요!");     return; }
+            if (visit.equals("") || visit.equals("채워주세요!")){
+                tfVisit.setText("채워주세요!");     return; }
+            if (tel.equals("") || tel.equals("채워주세요!")){
+                tfTel.setText("채워주세요!");     return; }
             //db 수정 문법
-            stmt.executeUpdate("update bestFood set foodType = '" + in_Type +"', name = '" + in_name + "' where id = '" + in_id + "'");
+            stmt.executeUpdate("update bestFood set id = '" + in_id + "', name = '" + in_name + "', foodType = '" +in_Type+
+                    "', price = '" + price + "', dayOff = '" + dayOff + "', good ='" +good+"', stars = '" +stars+ "', dist = '" + dist
+                    + "', visit = '" + visit + "', tel = '" + tel+ "';");
             System.out.println(in_name + "수정 완료");
             tfId.setText("");
             tfName.setText("");
             tfType.setText("");
+            tfPrice.setText("");
+            tfDayOff.setText("");
+            tfGood.setText("");
+            tfStars.setText("");
+            tfDist.setText("");
+            tfVisit.setText("");
+            tfTel.setText("");
             stmt.close();
             conn.close();
-        } catch (Exception e) {
+        }catch (SQLIntegrityConstraintViolationException a){
+            tfId.setText("없는 번호 입니다!!!");
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
 
