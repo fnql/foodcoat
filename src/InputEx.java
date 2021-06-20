@@ -4,21 +4,25 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
+import java.time.LocalDate;
 
 public class InputEx extends JFrame {
     //변수 설정
-    JButton btnInsert, btnDelete, btnUpdate, btnSelect, btnSearch, btnCreate, btnOn;
-    JTextField tfId, tfName, tfType, tfSearch, tfPrice, tfDayOff,tfGood, tfStars, tfDist, tfVisit, tfTel;
+    JButton btnInsert, btnDelete, btnUpdate, btnSelect, btnSearch, btnRe, btnOn;
+    JTextField tfId, tfName, tfType, tfSearch, tfPrice, tfDayOff,tfGood, tfStars, tfDist, tfVisit, tfTel,price;
+    JScrollPane scrollPane;
     JTextArea ta;
     JRadioButton rbId, rbName, rbType;
-    JPanel p;
+    Image Iconimg;
+    JPanel p,search;
+    JComboBox<String> shoplist;
     Connection conn;
-    Statement stmt;
-    ResultSet rs;
+    Statement stmt,stmt2,stmt3;
+    ResultSet rs,rcount,rdate;
     Boolean onOff;
+    Color BGcolor;
+    int i=0;
 
     public InputEx(){
         this.setTitle("맛집 관리 프로젝트");
@@ -26,6 +30,7 @@ public class InputEx extends JFrame {
 
         createGUI();
         plus();
+        event();
         //버튼 이벤트 설정
         btnInsert.addActionListener(new ActionListener() {
             @Override
@@ -60,13 +65,13 @@ public class InputEx extends JFrame {
         this.setSize(300,550);
         this.setVisible(true);
     }
-    private void createGUI() {
+    private void createGUI() { //crud기능
         Container ca = getContentPane();
         ca.setLayout(new FlowLayout());
         JPanel c = new JPanel();
-        c.setLayout(new GridLayout(15,4,5,5));
-        c.setBounds(0, 0, 100, 250);
-        c.add(new JLabel("학번        "));
+        c.setPreferredSize(new Dimension(200,500));
+        c.setLayout(new GridLayout(15,2,5,5));
+        c.add(new JLabel("구분        "));
         tfId = new JTextField(20);
         c.add(tfId);
         c.add(new JLabel("이름        "));
@@ -105,67 +110,157 @@ public class InputEx extends JFrame {
         btnSelect = new JButton("조회");
         c.add(btnSelect);
         ca.add(BorderLayout.CENTER,c);
-        onOff = true;
-
+        onOff = false;
+        c.setVisible(false);
         btnOn = new JButton("상세");
         btnOn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 onOff = !onOff;
                 c.setVisible(onOff);
+
             }
         });
         ca.add(btnOn);
     }
     //화면 만들기
-    private void plus() {
-        Container c = getContentPane();
-        c.setLayout(new FlowLayout());
+    private void plus() {   //front 보이는 부분
+        try{
+            LocalDate currentDate = LocalDate.now();
+            String resultStr = null;
+            resultStr = JOptionPane.showInputDialog("어제 방문하신 식당을 입력해주세요.", "X");
+            System.out.println("resultStr = " + resultStr);
+            conn = DBConn.dbConnection(); //db 설정 클래스 처리
+            stmt = conn.createStatement();
+            stmt2 = conn.createStatement();
 
-        p= new JPanel();
-        p.add(new JLabel("A Panel"));
-        c.add(p);
-        //db CRUD 창
+            String searchSql = "";
 
 
-        //검색부분
-        tfSearch = new JTextField(18);
-        rbId = new JRadioButton("학번", true);
-        rbName = new JRadioButton("이름");
-        rbType = new JRadioButton("종류");
-        ButtonGroup group = new ButtonGroup();
-        group.add(rbId);
-        group.add(rbName);
-        group.add(rbType);
-        btnSearch = new JButton("검색");
-        JPanel pn1 = new JPanel();
-        pn1.add(new JLabel(" "));
-        pn1.add(tfSearch);
-        pn1.add(btnSearch);
-        JPanel pn2 = new JPanel();
-        pn2.add(rbId);
-        pn2.add(rbName);
-        pn2.add(rbType);
-        JPanel pMiddle = new JPanel(new BorderLayout(0,0));
-        pMiddle.add(BorderLayout.NORTH, pn1);
-        pMiddle.add(BorderLayout.CENTER, pn2);
-        TitledBorder tb = new TitledBorder("검색");
-        pMiddle.setBorder(tb);
+            searchSql = String.format("update bestFood set visit =  '%s'  where name =    '%s'   ", currentDate,resultStr);
 
-        //출력 장소 만들기
-        c.add(pMiddle);
-        ta = new JTextArea(15, 20);
-        c.add(ta);
+            stmt.executeUpdate(searchSql);
+            rcount = stmt2.executeQuery("select * from bestFood;");
+            rs = stmt.executeQuery("select name from bestFood;"); //식당명 가져오기
+
+
+            BGcolor=new Color(178,235,244,80);
+            Iconimg = new ImageIcon("logo1.png").getImage();
+            setIconImage(Iconimg);
+            Container c = getContentPane();
+            c.setLayout(new FlowLayout());
+
+            search=new JPanel() {
+                public void paintComponent(Graphics g) //바탕색 설정
+                {
+                    g.setColor(BGcolor);
+                    g.fillRect(0,0,2000,100);
+                    setOpaque(false);
+                    super.paintComponent(g);
+                }
+            };
+            search.setLayout(new GridLayout(2,0));
+
+            while (rcount.next()){
+                i++;
+            }
+
+            String nana[] = new String[i];
+            i=0;
+            while (rs.next()){
+                nana[i] = rs.getString("name");
+                System.out.println(nana[i]);
+                i++;
+            }
+
+
+            btnRe = new JButton("추천");
+            btnRe.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try{
+                        conn = DBConn.dbConnection();
+                        stmt3 = conn.createStatement();
+                        rdate = stmt3.executeQuery("select * from bestFood order by visit desc;");
+                        String line ="";
+                        ta.setText("    id    name    visit\n");
+                        ta.append("---------------------\n");
+                        while (rdate.next()){
+                            String name = rdate.getString("name");
+                            String visit = rdate.getString("visit");
+                            String id = rdate.getString("id");
+                            line = " | " +id + " | " +name + " |    "+visit+"\n";
+                            System.out.println("rdate => " +line);
+                            ta.append(line);
+                        }
+                        stmt3.close();
+                    }catch (Exception c) {
+                        c.printStackTrace();
+                    }
+
+                }
+            });
+            c.add(btnRe);
+
+
+
+            search.add(new JLabel("점포검색",JLabel.CENTER)); //식당 표시
+            shoplist = new JComboBox<String>(nana);
+            search.add(shoplist);
+            search.add(new JLabel("가격검색(이하)",JLabel.CENTER));
+            search.add(price=new JTextField());
+
+            c.add(search);
+
+            //db CRUD 창
+            //검색부분
+            tfSearch = new JTextField(18);
+            rbId = new JRadioButton("학번", true);
+            rbName = new JRadioButton("이름");
+            rbType = new JRadioButton("종류");
+            ButtonGroup group = new ButtonGroup();
+            group.add(rbId);
+            group.add(rbName);
+            group.add(rbType);
+            btnSearch = new JButton("검색");
+            JPanel pn1 = new JPanel();
+            pn1.add(new JLabel(" "));
+            pn1.add(tfSearch);
+            pn1.add(btnSearch);
+            JPanel pn2 = new JPanel();
+            pn2.add(rbId);
+            pn2.add(rbName);
+            pn2.add(rbType);
+            JPanel pMiddle = new JPanel(new BorderLayout(0,0));
+            pMiddle.add(BorderLayout.NORTH, pn1);
+            pMiddle.add(BorderLayout.CENTER, pn2);
+            TitledBorder tb = new TitledBorder("검색");
+            pMiddle.setBorder(tb);
+
+            //출력 장소 만들기
+            c.add(pMiddle);
+            ta = new JTextArea(15, 15);
+            ta.setFont(new Font("휴먼엑스포",Font.PLAIN,17));
+            scrollPane = new JScrollPane(ta);
+            c.add(scrollPane);
+            stmt.close();
+            stmt2.close();
+
+            conn.close();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
     //db 선택
-    private void dbSelect() {
+    private void dbSelect() {       //조회
         try {
             conn = DBConn.dbConnection(); //db 설정 클래스 처리
             stmt = conn.createStatement();
             rs = stmt.executeQuery("select * from bestFood;");
             String line ="";
-            ta.setText("    id              name            Type  \n");
-            ta.append("-----------------------------------------------\n");
+            ta.setText("id    name    Type  \n");
+            ta.append("---------------------\n");
             while (rs.next()){
                 String name = rs.getString("name");
                 String foodType = rs.getString("foodType");
@@ -176,7 +271,8 @@ public class InputEx extends JFrame {
             }
             stmt.close();
             conn.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -204,18 +300,60 @@ public class InputEx extends JFrame {
         try {
             conn = DBConn.dbConnection(); //db 설정 클래스 처리
             stmt = conn.createStatement();
+
             String id = tfId.getText().toString();
             String name = tfName.getText().toString();
             String foodType = tfType.getText().toString();
+            String  price= tfPrice.getText().toString();
+            String  dayOff= tfDayOff.getText().toString();
+            String  good= tfGood.getText().toString();
+            String  stars= tfStars.getText().toString();
+            String  dist= tfDist.getText().toString();
+            String  visit= tfVisit.getText().toString();
+            String  tel= tfTel.getText().toString();
+
+            if (id.equals("") || id.equals("채워주세요!")){
+                tfId.setText("채워주세요!");     return; }
+            if (name.equals("") || name.equals("채워주세요!!")){
+                tfName.setText("채워주세요!!");  return; }
+            if (foodType.equals("") || foodType.equals("채워주세요!")){
+                tfType.setText("채워주세요!");     return; }
+            if (price.equals("") || price.equals("채워주세요!")){
+                tfPrice.setText("채워주세요!");     return; }
+            if (dayOff.equals("") || dayOff.equals("채워주세요!")){
+                tfDayOff.setText("채워주세요!");     return; }
+            if (good.equals("") || good.equals("채워주세요!")){
+                tfGood.setText("채워주세요!");     return; }
+            if (stars.equals("") || stars.equals("채워주세요!")){
+                tfStars.setText("채워주세요!");     return; }
+            if (dist.equals("") || dist.equals("채워주세요!")){
+                tfDist.setText("채워주세요!");     return; }
+            if (visit.equals("") || visit.equals("채워주세요!")){
+                tfVisit.setText("채워주세요!");     return; }
+            if (tel.equals("") || tel.equals("채워주세요!")){
+                tfTel.setText("채워주세요!");     return; }
+
             //data 입력 구문
-            stmt.executeUpdate("insert into bestFood(id,name,foodType) values('" + id + "', '" + name + "', '" +foodType+"');");
+            stmt.executeUpdate("insert into bestFood values('" + id + "', '" + name + "', '" +foodType+"','" + price +
+                    "','" + dayOff + "','" +good+"','" +stars+ "','" + dist + "','" + visit + "','" + tel+ "');");
             System.out.println(name + "입력 완료");
             tfId.setText("");
             tfName.setText("");
             tfType.setText("");
+            tfPrice.setText("");
+            tfDayOff.setText("");
+            tfGood.setText("");
+            tfStars.setText("");
+            tfDist.setText("");
+            tfVisit.setText("");
+            tfTel.setText("");
+
             stmt.close();
             conn.close();
-        } catch (Exception e) {
+        }catch (SQLIntegrityConstraintViolationException a){
+            tfId.setText("구분번호 중복!!!");
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -227,15 +365,55 @@ public class InputEx extends JFrame {
             String in_id = tfId.getText().toString();
             String in_name = tfName.getText().toString();
             String in_Type = tfType.getText().toString();
+            String  price= tfPrice.getText().toString();
+            String  dayOff= tfDayOff.getText().toString();
+            String  good= tfGood.getText().toString();
+            String  stars= tfStars.getText().toString();
+            String  dist= tfDist.getText().toString();
+            String  visit= tfVisit.getText().toString();
+            String  tel= tfTel.getText().toString();
+
+            if (in_id.equals("") || in_id.equals("채워주세요!")){
+                tfId.setText("채워주세요!");     return; }
+            if (in_name.equals("") || in_name.equals("채워주세요!!")){
+                tfName.setText("채워주세요!!");  return; }
+            if (in_Type.equals("") || in_Type.equals("채워주세요!")){
+                tfType.setText("채워주세요!");     return; }
+            if (price.equals("") || price.equals("채워주세요!")){
+                tfPrice.setText("채워주세요!");     return; }
+            if (dayOff.equals("") || dayOff.equals("채워주세요!")){
+                tfDayOff.setText("채워주세요!");     return; }
+            if (good.equals("") || good.equals("채워주세요!")){
+                tfGood.setText("채워주세요!");     return; }
+            if (stars.equals("") || stars.equals("채워주세요!")){
+                tfStars.setText("채워주세요!");     return; }
+            if (dist.equals("") || dist.equals("채워주세요!")){
+                tfDist.setText("채워주세요!");     return; }
+            if (visit.equals("") || visit.equals("채워주세요!")){
+                tfVisit.setText("채워주세요!");     return; }
+            if (tel.equals("") || tel.equals("채워주세요!")){
+                tfTel.setText("채워주세요!");     return; }
             //db 수정 문법
-            stmt.executeUpdate("update bestFood set foodType = '" + in_Type +"', name = '" + in_name + "' where id = '" + in_id + "'");
+            stmt.executeUpdate("update bestFood set id = '" + in_id + "', name = '" + in_name + "', foodType = '" +in_Type+
+                    "', price = '" + price + "', dayOff = '" + dayOff + "', good ='" +good+"', stars = '" +stars+ "', dist = '" + dist
+                    + "', visit = '" + visit + "', tel = '" + tel+ "';");
             System.out.println(in_name + "수정 완료");
             tfId.setText("");
             tfName.setText("");
             tfType.setText("");
+            tfPrice.setText("");
+            tfDayOff.setText("");
+            tfGood.setText("");
+            tfStars.setText("");
+            tfDist.setText("");
+            tfVisit.setText("");
+            tfTel.setText("");
             stmt.close();
             conn.close();
-        } catch (Exception e) {
+        }catch (SQLIntegrityConstraintViolationException a){
+            tfId.setText("없는 번호 입니다!!!");
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -255,9 +433,76 @@ public class InputEx extends JFrame {
                 searchSql = "select * from bestFood where foodType = '" + searchText + "';";
             }
             rs = stmt.executeQuery(searchSql);
+            ta.setText("");
+            addTa(rs);
+
+            stmt.close();
+            conn.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void event(){
+        try{
+            shoplist.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+
+                    try {
+                        conn = DBConn.dbConnection(); //db 설정 클래스 처리
+                        stmt = conn.createStatement();
+                        String searchN = "";
+                        String shopS=(String) shoplist.getSelectedItem();
+                        searchN = "select * from bestFood where name = '" + shopS + "';";
+                        rs = stmt.executeQuery(searchN);
+                        ta.setText("");
+                        addTa(rs);
+                        stmt.close();
+                        conn.close();
+                    } catch (Exception a) {
+                        a.printStackTrace();
+                    }
+                }
+            });
+            price.addActionListener(new ActionListener() //음식가격 검색 이벤트
+            {
+                public void actionPerformed(ActionEvent event)
+                {
+                    try {
+                        conn = DBConn.dbConnection(); //db 설정 클래스 처리
+                        stmt = conn.createStatement();
+                        String priceS=price.getText();
+                        String searchSQL = "SELECT * FROM bestFood WHERE price<= '" +priceS+ "' ;";
+                        rs = stmt.executeQuery(searchSQL);
+                        String line ="";
+                        ta.setText("id    name    avgPrice  \n");
+                        ta.append("---------------------\n");
+                        while (rs.next()){
+                            String name = rs.getString("name");
+                            String price = rs.getString("price");
+                            String id = rs.getString("id");
+                            line = " | " +id + " | " +name + " | "+price+"\n";
+                            System.out.println("rs => " +line);
+                            ta.append(line);
+                        }
+                        stmt.close();
+                        conn.close();
+                    } catch (Exception a) {
+                        a.printStackTrace();
+                    }
+                }
+            });
+
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void addTa(ResultSet rs){
+        try {
             String line ="";
-            ta.setText("    id              name            Type  \n");
-            ta.append("-----------------------------------------------\n");
             while (rs.next()){
                 String name = rs.getString("name");
                 String foodType = rs.getString("foodType");
@@ -269,26 +514,27 @@ public class InputEx extends JFrame {
                 String dist = rs.getString("dist");
                 String visit = rs.getString("visit");
                 String tel = rs.getString("tel");
-                line = " | " +id + " | " +name + " | "+ foodType +"\n" +
-                        " | " +"price" + " | " +"dayOff" + " | "+ "bestMenu" +"\n" +
-                        " | " +price + " | " +dayOff + " | "+ good +"\n"    +
-                        " | " +"stars" + " | " +"dist" + " | "+ "visit" +"\n" +
-                        " | " +stars + " | " +dist + " | "+ visit +"\n"    +
-                        " | " +"tel" +"\n" +
-                        " | " +tel +"\n";
+                line = "\n"+"식당명 : "+ name +"\n"+
+                        "음식종류 : " + foodType+"\n"+
+                        "평균가 : " +price +"\n"+
+                        "쉬는날 : " +dayOff +"\n"+
+                        "추천메뉴 : " + good +"\n"+
+                        "별점 : " +stars +"\n"+
+                        "거리 : " +dist +"\n"+
+                        "방문일 : " + visit +"\n"+
+                        "전화번호 : " + tel;
                 System.out.println("rs => " +line);
                 ta.append(line);
             }
-            stmt.close();
-            conn.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception a) {
+            a.printStackTrace();
         }
+
     }
 
     public static void main(String[] args) {
         new InputEx();
     }
 
-
 }
+
