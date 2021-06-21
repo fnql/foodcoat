@@ -239,7 +239,16 @@ public class InputEx extends JFrame {
 
             //출력 장소 만들기
             c.add(pMiddle);
-            ta = new JTextArea(15, 15);
+            Image img = new ImageIcon("menu.png").getImage(); //이미지 선언
+
+            ta = new JTextArea(15,15){
+                { setOpaque( false ) ; }
+                public void paintComponent(Graphics g){
+                    g.drawImage(img,0,0,null);       //이미지 그리기
+                    super.paintComponent(g);
+                }
+            };
+
             ta.setFont(new Font("휴먼엑스포",Font.PLAIN,17));
             scrollPane = new JScrollPane(ta);
             c.add(scrollPane);
