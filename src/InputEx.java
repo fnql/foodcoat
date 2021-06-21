@@ -145,7 +145,7 @@ public class InputEx extends JFrame {
 
 
             BGcolor=new Color(178,235,244,80);
-            Iconimg = new ImageIcon("logo1.png").getImage();
+            Iconimg = new ImageIcon("logo.png").getImage();
             setIconImage(Iconimg);
             Container c = getContentPane();
             c.setLayout(new FlowLayout());
