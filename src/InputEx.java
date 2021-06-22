@@ -62,7 +62,7 @@ public class InputEx extends JFrame {
                 dbSearch();
             }
         });
-        this.setSize(300,550);
+        this.setSize(350,550);
         this.setVisible(true);
     }
     private void createGUI() { //crud기능
@@ -112,7 +112,7 @@ public class InputEx extends JFrame {
         ca.add(BorderLayout.CENTER,c);
         onOff = false;
         c.setVisible(false);
-        btnOn = new JButton("상세");
+        btnOn = new JButton("식당관리");
         btnOn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -183,7 +183,7 @@ public class InputEx extends JFrame {
                         stmt3 = conn.createStatement();
                         rdate = stmt3.executeQuery("select * from bestFood order by visit desc;");
                         String line ="";
-                        ta.setText("    번호    식당명    방문일\n");
+                        ta.setText("  번호    식당명    방문일\n");
                         ta.append("---------------------\n");
                         while (rdate.next()){
                             String name = rdate.getString("name");
@@ -268,7 +268,7 @@ public class InputEx extends JFrame {
             stmt = conn.createStatement();
             rs = stmt.executeQuery("select * from bestFood;");
             String line ="";
-            ta.setText("번호    식당명    종류  \n");
+            ta.setText("  번호    식당명    종류  \n");
             ta.append("---------------------\n");
             while (rs.next()){
                 String name = rs.getString("name");
@@ -485,7 +485,7 @@ public class InputEx extends JFrame {
                         String searchSQL = "SELECT * FROM bestFood WHERE price<= '" +priceS+ "' ;";
                         rs = stmt.executeQuery(searchSQL);
                         String line ="";
-                        ta.setText("번호    이름    평균가  \n");
+                        ta.setText("  번호    이름    평균가  \n");
                         ta.append("---------------------\n");
                         while (rs.next()){
                             String name = rs.getString("name");
@@ -523,7 +523,7 @@ public class InputEx extends JFrame {
                 String dist = rs.getString("dist");
                 String visit = rs.getString("visit");
                 String tel = rs.getString("tel");
-                line = "\n"+"식당명 : "+ name +"\n"+
+                line = "식당명 : "+ name +"\n"+
                         "음식종류 : " + foodType+"\n"+
                         "평균가 : " +price +"\n"+
                         "쉬는날 : " +dayOff +"\n"+
@@ -531,7 +531,7 @@ public class InputEx extends JFrame {
                         "별점 : " +stars +"\n"+
                         "거리 : " +dist +"\n"+
                         "방문일 : " + visit +"\n"+
-                        "전화번호 : " + tel;
+                        "전화번호 : " + tel + "\n\n";
                 System.out.println("rs => " +line);
                 ta.append(line);
             }
