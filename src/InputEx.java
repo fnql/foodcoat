@@ -62,11 +62,7 @@ public class InputEx extends JFrame {
                 dbSearch();
             }
         });
-        Dimension frameSize = getSize();
-        Dimension windowSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setLocation((windowSize.width - frameSize.width) / 2 -150,
-                (windowSize.height - frameSize.height) / 2 -150);
-        this.setSize(350,550);
+        this.setSize(300,550);
         this.setVisible(true);
     }
     private void createGUI() { //crud기능
@@ -116,12 +112,13 @@ public class InputEx extends JFrame {
         ca.add(BorderLayout.CENTER,c);
         onOff = false;
         c.setVisible(false);
-        btnOn = new JButton("식당관리");
+        btnOn = new JButton("상세");
         btnOn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 onOff = !onOff;
                 c.setVisible(onOff);
+
             }
         });
         ca.add(btnOn);
@@ -139,11 +136,13 @@ public class InputEx extends JFrame {
 
             String searchSql = "";
 
-            searchSql = String.format("update bestFood set visit =  '%s'  where name =    '%s'   ", currentDate.minusDays(1),resultStr);
+
+            searchSql = String.format("update bestFood set visit =  '%s'  where name =    '%s'   ", currentDate,resultStr);
 
             stmt.executeUpdate(searchSql);
             rcount = stmt2.executeQuery("select * from bestFood;");
             rs = stmt.executeQuery("select name from bestFood;"); //식당명 가져오기
+
 
             BGcolor=new Color(178,235,244,80);
             Iconimg = new ImageIcon("logo.png").getImage();
@@ -182,30 +181,12 @@ public class InputEx extends JFrame {
                     try{
                         conn = DBConn.dbConnection();
                         stmt3 = conn.createStatement();
-                        rdate = stmt3.executeQuery("select * from bestFood order by visit;");
+                        rdate = stmt3.executeQuery("select * from bestFood order by visit desc;");
                         String line ="";
-                        ta.setText("  번호    식당명       방문일\n");
-                        ta.append("-----------------------------\n");
+                        ta.setText("    번호    식당명    방문일\n");
+                        ta.append("---------------------\n");
                         while (rdate.next()){
                             String name = rdate.getString("name");
-                            int i = name.length();
-                            switch (i){
-                                case 2:
-                                    name=String.format("%-14s", name);
-                                    break;
-                                case 3:
-                                    name=String.format("%-13s", name);
-                                    break;
-                                case 4:
-                                    name=String.format("%-11s", name);
-                                    break;
-                                case 5:
-                                    name=String.format("%-10s", name);
-                                    break;
-                                case 7:
-                                    name=String.format("%s", name);
-                                    break;
-                            }
                             String visit = rdate.getString("visit");
                             String id = rdate.getString("id");
                             line = " | " +id + " | " +name + " |    "+visit+"\n";
@@ -220,6 +201,8 @@ public class InputEx extends JFrame {
                 }
             });
             c.add(btnRe);
+
+
 
             search.add(new JLabel("점포검색",JLabel.CENTER)); //식당 표시
             shoplist = new JComboBox<String>(nana);
@@ -258,7 +241,7 @@ public class InputEx extends JFrame {
             c.add(pMiddle);
             Image img = new ImageIcon("menu40.jpg").getImage(); //이미지 선언
 
-            ta = new JTextArea(15,18){
+            ta = new JTextArea(15,15){
                 { setOpaque( false ) ; }
                 public void paintComponent(Graphics g){
                     g.drawImage(img,0,0,null);       //이미지 그리기
@@ -273,7 +256,7 @@ public class InputEx extends JFrame {
             stmt2.close();
 
             conn.close();
-        } catch (Exception e) {
+        }catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -285,43 +268,15 @@ public class InputEx extends JFrame {
             stmt = conn.createStatement();
             rs = stmt.executeQuery("select * from bestFood;");
             String line ="";
-            ta.setText(" 전체조회  \n");
-            ta.append("-------------------------------\n");
+            ta.setText("번호    식당명    종류  \n");
+            ta.append("---------------------\n");
             while (rs.next()){
                 String name = rs.getString("name");
                 String foodType = rs.getString("foodType");
                 String id = rs.getString("id");
-                String  price= rs.getString("price");
-                String  dayOff= rs.getString("dayOff");
-                String  good= rs.getString("good");
-                String  stars= rs.getString("stars");
-                String  dist= rs.getString("dist");
-                String  visit= rs.getString("visit");
-                String  tel= rs.getString("tel");
-
-                line = id + ". " +name + "\n"+foodType+"\n" +price+"\n"+dayOff+"\n"
-                        +good+"\n"+stars+"\n"+dist+"m\n"+visit+"\n"+tel+"\n\n";
+                line = " | " +id + " | " +name + " |    "+foodType+"\n";
                 System.out.println("rs => " +line);
                 ta.append(line);
-                int i = name.length();
-                switch (i){
-                    case 2:
-                        name=String.format("%-15s", name);
-                        break;
-                    case 3:
-                        name=String.format("%-14s", name);
-                        break;
-                    case 4:
-                        name=String.format("%-12s", name);
-                        break;
-                    case 5:
-                        name=String.format("%-11s", name);
-                        break;
-                    case 7:
-                        name=String.format("%2s", name);
-                        break;
-                }
-
             }
             stmt.close();
             conn.close();
@@ -511,7 +466,6 @@ public class InputEx extends JFrame {
                         searchN = "select * from bestFood where name = '" + shopS + "';";
                         rs = stmt.executeQuery(searchN);
                         ta.setText("");
-                        new Menus(shopS);
                         addTa(rs);
                         stmt.close();
                         conn.close();
@@ -531,28 +485,10 @@ public class InputEx extends JFrame {
                         String searchSQL = "SELECT * FROM bestFood WHERE price<= '" +priceS+ "' ;";
                         rs = stmt.executeQuery(searchSQL);
                         String line ="";
-                        ta.setText("  번호    이름        평균가  \n");
-                        ta.append("----------------------------\n");
+                        ta.setText("번호    이름    평균가  \n");
+                        ta.append("---------------------\n");
                         while (rs.next()){
                             String name = rs.getString("name");
-                            int i = name.length();
-                            switch (i){
-                                case 2:
-                                    name=String.format("%-14s", name);
-                                    break;
-                                case 3:
-                                    name=String.format("%-13s", name);
-                                    break;
-                                case 4:
-                                    name=String.format("%-11s", name);
-                                    break;
-                                case 5:
-                                    name=String.format("%-10s", name);
-                                    break;
-                                case 7:
-                                    name=String.format("%s", name);
-                                    break;
-                            }
                             String price = rs.getString("price");
                             String id = rs.getString("id");
                             line = " | " +id + " | " +name + " | "+price+"\n";
@@ -587,15 +523,15 @@ public class InputEx extends JFrame {
                 String dist = rs.getString("dist");
                 String visit = rs.getString("visit");
                 String tel = rs.getString("tel");
-                line = "식당명 : "+ name +"\n"+
+                line = "\n"+"식당명 : "+ name +"\n"+
                         "음식종류 : " + foodType+"\n"+
                         "평균가 : " +price +"\n"+
                         "쉬는날 : " +dayOff +"\n"+
                         "추천메뉴 : " + good +"\n"+
                         "별점 : " +stars +"\n"+
-                        "거리 : " +dist +"m\n"+
+                        "거리 : " +dist +"\n"+
                         "방문일 : " + visit +"\n"+
-                        "전화번호 : " + tel + "\n\n";
+                        "전화번호 : " + tel;
                 System.out.println("rs => " +line);
                 ta.append(line);
             }
@@ -610,3 +546,4 @@ public class InputEx extends JFrame {
     }
 
 }
+
