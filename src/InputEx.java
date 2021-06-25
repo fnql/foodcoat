@@ -137,7 +137,7 @@ public class InputEx extends JFrame {
             String searchSql = "";
 
 
-            searchSql = String.format("update bestFood set visit =  '%s'  where name =    '%s'   ", currentDate,resultStr);
+            searchSql = String.format("update bestFood set visit =  '%s'  where name =    '%s'   ", currentDate.minusDays(1),resultStr);
 
             stmt.executeUpdate(searchSql);
             rcount = stmt2.executeQuery("select * from bestFood;");
@@ -181,7 +181,7 @@ public class InputEx extends JFrame {
                     try{
                         conn = DBConn.dbConnection();
                         stmt3 = conn.createStatement();
-                        rdate = stmt3.executeQuery("select * from bestFood order by visit desc;");
+                        rdate = stmt3.executeQuery("select * from bestFood order by visit;");
                         String line ="";
                         ta.setText("    번호    식당명    방문일\n");
                         ta.append("---------------------\n");
@@ -359,6 +359,7 @@ public class InputEx extends JFrame {
 
             stmt.close();
             conn.close();
+
         }catch (SQLIntegrityConstraintViolationException a){
             tfId.setText("구분번호 중복!!!");
         }
